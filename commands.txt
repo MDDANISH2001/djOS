@@ -1,0 +1,22 @@
+*****Rebuild the disk image*****
+
+//Assemble bootloader:
+nasm -f bin boot/boot.asm -o boot.bin
+
+//Create disk again:
+dd if=/dev/zero of=os.img bs=512 count=2880
+
+//Write bootloader:
+dd if=boot.bin of=os.img conv=notrunc
+
+// to compile the kernel
+gcc -ffreestanding -m32 -c kernel/kernel.c -o kernel.o
+
+//to link the kernel
+ld -m elf_i386 -T linker.ld kernel.o -o kernel.bin
+
+//Append kernel:
+dd if=kernel.bin of=os.img bs=512 seek=1 conv=notrunc
+
+// to run the operating system in current linux OS.
+qemu-system-x86_64 -drive format=raw,file=os.img
